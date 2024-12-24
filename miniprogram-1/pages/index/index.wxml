@@ -1,0 +1,23 @@
+<view class="container">
+  <view class="status">
+    <text>玩家：{{player.name}}</text>
+    <text>生命值：{{player.health}}</text>
+    <text>攻击力：{{player.attack}}</text>
+    <text>防御力：{{player.defense}}</text>
+  </view>
+  <view class="character">
+    <image src="/assets/character.png" mode="aspectFit" class="character-image"></image>
+  </view>
+  <view class="message">
+    <text>{{message}}</text>
+  </view>
+  <view wx:if="{{optionsVisible}}" class="options">
+    <button wx:if="{{encounter.type === 'item'}}" bindtap="chooseOption" data-option="accept">拾取</button>
+    <button wx:if="{{encounter.type === 'item'}}" bindtap="chooseOption" data-option="ignore">忽略</button>
+    <button wx:if="{{encounter.type === 'enemy'}}" bindtap="chooseOption" data-option="fight">战斗</button>
+    <button wx:if="{{encounter.type === 'enemy'}}" bindtap="chooseOption" data-option="run">逃跑</button>
+  </view>
+  <view wx:if="{{continueVisible}}" class="continue">
+    <button bindtap="continueForward">继续前进</button>
+  </view>
+</view>

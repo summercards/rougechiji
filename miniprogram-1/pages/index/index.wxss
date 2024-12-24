@@ -1,0 +1,30 @@
+.container {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+.status {
+  margin-bottom: 20px;
+}
+.character {
+  margin: 20px 0;
+  text-align: center;
+}
+.character-image {
+  width: 100px;
+  height: 100px;
+}
+.message {
+  margin-bottom: 20px;
+}
+.options {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.options button {
+  flex: 1;
+  margin: 0 10px;
+}
+.continue button {
+  margin-top: 20px;
+}

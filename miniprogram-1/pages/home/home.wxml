@@ -1,0 +1,8 @@
+<view class="container">
+  <view class="welcome">
+    <text>欢迎来到游戏！</text>
+  </view>
+  <view class="start-button">
+    <button bindtap="navigateToGame">进入游戏</button>
+  </view>
+</view>
