@@ -1,23 +1,59 @@
 <view class="container">
+  <!-- 玩家属性 -->
   <view class="status">
-    <text>玩家：{{player.name}}</text>
-    <text>生命值：{{player.health}}</text>
-    <text>攻击力：{{player.attack}}</text>
-    <text>防御力：{{player.defense}}</text>
+    <view class="status-item">
+      <text>生命值：{{player.health}}</text>
+    </view>
+    <view class="status-item">
+      <text>攻击力：{{player.attack}}</text>
+    </view>
   </view>
-  <view class="character">
-    <image src="/assets/character.png" mode="aspectFit" class="character-image"></image>
+
+  <!-- 游戏画面 -->
+  <view class="game-view">
+    <image src="/assets/character.png" mode="aspectFit" class="game-character"></image>
   </view>
-  <view class="message">
+
+  <!-- 信息模块 -->
+  <view class="info-box">
     <text>{{message}}</text>
   </view>
-  <view wx:if="{{optionsVisible}}" class="options">
-    <button wx:if="{{encounter.type === 'item'}}" bindtap="chooseOption" data-option="accept">拾取</button>
-    <button wx:if="{{encounter.type === 'item'}}" bindtap="chooseOption" data-option="ignore">忽略</button>
-    <button wx:if="{{encounter.type === 'enemy'}}" bindtap="chooseOption" data-option="fight">战斗</button>
-    <button wx:if="{{encounter.type === 'enemy'}}" bindtap="chooseOption" data-option="run">逃跑</button>
+
+  <!-- 武器和防弹衣信息 -->
+  <view class="equipment-info">
+    <view class="equipment-item">
+      <text>武器：{{player.equipment.weapon ? player.equipment.weapon.name : '无'}}</text>
+    </view>
+    <view class="equipment-item spacer"></view>
+    <view class="equipment-item">
+      <text>防弹衣：{{player.equipment.armor ? player.equipment.armor.defense : '无'}}</text>
+    </view>
   </view>
-  <view wx:if="{{continueVisible}}" class="continue">
-    <button bindtap="continueForward">继续前进</button>
+
+  <!-- 背包 -->
+  <view class="backpack">
+    <text>背包：</text>
+    <view class="grid">
+      <block wx:for="{{player.equipment.backpack}}" wx:key="id">
+        <view class="grid-item">
+          <text>{{item.name ? item.name : '空'}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 固定操作按钮 -->
+  <view class="options">
+    <!-- 遇到物品时显示拾取和忽略按钮 -->
+    <button wx:if="{{optionsVisible && encounter.type === 'item'}}" bindtap="chooseOption" data-option="accept" class="accept-button">拾取</button>
+    <button wx:if="{{optionsVisible && encounter.type === 'item'}}" bindtap="chooseOption" data-option="ignore" class="ignore-button">忽略</button>
+
+    <!-- 遇到敌人时显示战斗和逃跑按钮 -->
+    <button wx:if="{{optionsVisible && encounter.type === 'enemy'}}" bindtap="chooseOption" data-option="fight" class="fight-button">战斗</button>
+    <button wx:if="{{optionsVisible && encounter.type === 'enemy'}}" bindtap="chooseOption" data-option="run" class="run-button">逃跑</button>
+
+    <!-- 通用按钮 -->
+    <button wx:if="{{continueVisible}}" bindtap="continueForward" class="continue-button">继续前进</button>
+    <button wx:if="{{gameOver}}" bindtap="restartGame" class="restart-button">回到主界面</button>
   </view>
 </view>
