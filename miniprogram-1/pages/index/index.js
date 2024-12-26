@@ -8,7 +8,6 @@ Page({
       name: '求生者',
       health: 100,
       attack: 10,
-      defense: 0,
       equipment: {
         weapon: null, // 武器栏
         armor: null, // 防弹衣栏
@@ -22,13 +21,28 @@ Page({
     encounter: null,
     itemPool: [
       { name: '步枪', type: 'weapon', attack: 10 },
-      { name: '防弹衣', type: 'armor', defense: 5 },
+      { name: '防弹衣', type: 'armor', defense: 20 },
       { name: '急救包', type: 'healing', health: 20 },
     ],
     enemyPool: [
-      { name: '敌人1', health: 30, attack: 15, defense: 2 },
-      { name: '敌人2', health: 50, attack: 20, defense: 5 },
-      { name: '敌人3', health: 100, attack: 25, defense: 10 },
+      { 
+        name: '敌人1', 
+        health: 30, 
+        attack: 15, 
+        drops: ['weapon', 'armor', 'healing'] 
+      },
+      { 
+        name: '敌人2', 
+        health: 50, 
+        attack: 20, 
+        drops: ['weapon', 'armor', 'healing'] 
+      },
+      { 
+        name: '敌人3', 
+        health: 100, 
+        attack: 25, 
+        drops: ['weapon', 'armor', 'healing'] 
+      },
     ],
     optionsVisible: false,
     continueVisible: false,
@@ -36,7 +50,6 @@ Page({
     gameOver: false,
   },
 
-  // 游戏初始化
   onLoad() {
     this.startFirstEncounter();
   },
@@ -58,17 +71,16 @@ Page({
       const item = this.data.itemPool[Math.floor(Math.random() * this.data.itemPool.length)];
       this.setData({
         encounter: { type: 'item', details: item },
-        message: `你发现了一个${item.name}！`,
-        optionsVisible: true,
-        continueVisible: false,
+        message: `你发现了一个${item.name}，已自动拾取！`,
       });
+      this.handleItemPickup(item); // 自动拾取物品
+      this.setData({ continueVisible: true }); // 显示继续前进按钮
     } else {
       const enemy = this.data.enemyPool[Math.floor(Math.random() * this.data.enemyPool.length)];
       this.setData({
         encounter: { type: 'enemy', details: enemy },
         message: `一个${enemy.name}出现了！`,
         optionsVisible: true,
-        continueVisible: false,
       });
     }
   },
@@ -79,16 +91,10 @@ Page({
 
     if (!encounter) return;
 
-    if (encounter.type === 'item') {
-      if (option === 'accept') {
-        this.handleItemPickup(encounter.details);
-      } else {
-        this.setData({ message: '你忽略了这个物品。' });
-      }
-    } else if (encounter.type === 'enemy') {
+    if (encounter.type === 'enemy') {
       if (option === 'fight') {
         this.startBattle();
-      } else {
+      } else if (option === 'run') {
         this.setData({ message: '你逃跑了！' });
       }
     }
@@ -106,8 +112,17 @@ Page({
       const effectMessage = useWeapon(player, item.name);
       this.setData({ player, message: effectMessage });
     } else if (item.type === 'armor') {
-      const effectMessage = useArmor(player, item.name);
-      this.setData({ player, message: effectMessage });
+      if (
+        !player.equipment.armor || 
+        (player.equipment.armor && item.defense > player.equipment.armor.defense)
+      ) {
+        player.equipment.armor = { name: item.name, defense: item.defense };
+        this.setData({ player, message: `你装备了新的防弹衣，数值为${item.defense}！` });
+      } else {
+        this.setData({
+          message: `当前防弹衣的数值更高，未更换防弹衣。`,
+        });
+      }
     } else {
       this.addItemToBackpack(item);
     }
@@ -154,22 +169,24 @@ Page({
     let battleLog = '';
 
     while (player.health > 0 && enemy.health > 0) {
-      const damageToEnemy = Math.max(player.attack - enemy.defense, 0);
-      let remainingDamageToPlayer = Math.max(enemy.attack - player.defense, 0);
+      const damageToEnemy = Math.max(player.attack, 0);
+      let remainingDamageToPlayer = Math.max(enemy.attack, 0);
 
-      if (player.defense > 0) {
-        const absorbed = Math.min(player.defense, remainingDamageToPlayer);
-        player.defense -= absorbed;
-        remainingDamageToPlayer -= absorbed;
+      if (player.equipment.armor && player.equipment.armor.defense > 0) {
+        const armorAbsorb = Math.min(player.equipment.armor.defense, remainingDamageToPlayer);
+        player.equipment.armor.defense -= armorAbsorb;
+        remainingDamageToPlayer -= armorAbsorb;
       }
 
       player.health = Math.max(player.health - remainingDamageToPlayer, 0);
       enemy.health -= damageToEnemy;
 
-      battleLog += `你对${enemy.name}造成了${damageToEnemy}点伤害，${enemy.name}对你造成了${remainingDamageToPlayer}点实际伤害。\n`;
+      battleLog += `你对${enemy.name}造成了${damageToEnemy}点伤害，`;
+      battleLog += `敌人对你造成了${remainingDamageToPlayer}点伤害（防弹衣吸收部分已扣除）。\n`;
 
       if (enemy.health <= 0) {
         battleLog += `你击败了${enemy.name}！\n`;
+        this.handleEnemyDrops(enemy); // 掉落物品
       } else if (player.health <= 0) {
         battleLog += `你被${enemy.name}击败了！游戏结束。\n`;
         this.setData({ gameOver: true });
@@ -183,6 +200,25 @@ Page({
       encounter: null,
       optionsVisible: false,
       continueVisible: player.health > 0 && !this.data.gameOver,
+    });
+  },
+
+  handleEnemyDrops(enemy) {
+    const { player, itemPool } = this.data;
+
+    const droppedItems = enemy.drops
+      .map(type => itemPool.find(item => item.type === type))
+      .filter(item => !!item)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2);
+
+    droppedItems.forEach(item => {
+      this.handleItemPickup(item);
+    });
+
+    const dropNames = droppedItems.map(item => item.name).join('、');
+    this.setData({
+      message: `敌人掉落了：${dropNames}，已自动拾取！`,
     });
   },
 

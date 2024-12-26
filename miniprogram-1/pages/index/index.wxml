@@ -44,10 +44,6 @@
 
   <!-- 固定操作按钮 -->
   <view class="options">
-    <!-- 遇到物品时显示拾取和忽略按钮 -->
-    <button wx:if="{{optionsVisible && encounter.type === 'item'}}" bindtap="chooseOption" data-option="accept" class="accept-button">拾取</button>
-    <button wx:if="{{optionsVisible && encounter.type === 'item'}}" bindtap="chooseOption" data-option="ignore" class="ignore-button">忽略</button>
-
     <!-- 遇到敌人时显示战斗和逃跑按钮 -->
     <button wx:if="{{optionsVisible && encounter.type === 'enemy'}}" bindtap="chooseOption" data-option="fight" class="fight-button">战斗</button>
     <button wx:if="{{optionsVisible && encounter.type === 'enemy'}}" bindtap="chooseOption" data-option="run" class="run-button">逃跑</button>
